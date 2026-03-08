@@ -1,0 +1,60 @@
+# AppFabriek Rails Template — Kamal Deployment Config
+# Replace all occurrences of "myapp" and "example.com" with your values.
+
+service: myapp
+image: myapp
+
+
+#-- About your deployment --#
+
+# Where to deploy your app
+servers:
+  web:
+    - myapp.example.com  # Set your server hostname here
+
+# How you connect to your server
+ssh:
+  user: root  # Change if you use a different SSH username
+
+# Automatic SSL
+proxy:
+  ssl: true               # Set to false if you don't want SSL
+  host: myapp.example.com # Set your hostname here to use automatic SSL
+
+# Your application configuration (secrets come from .kamal/secrets).
+env:
+  secret:
+    - SECRET_KEY_BASE
+    - SMTP_USERNAME
+    - SMTP_PASSWORD
+  clear:
+    BASE_URL: https://myapp.example.com  # The public URL of your app
+    MAILER_FROM_ADDRESS: hello@example.com
+    SMTP_ADDRESS: mail.example.com
+    MULTI_TENANT: false # Set to true to allow multiple accounts to sign up
+    SOLID_QUEUE_IN_PUMA: true # Run background jobs in the app container
+
+
+#-- General configuration --#
+
+# Use a local registry to deploy
+registry:
+  server: localhost:5555
+
+# Handy aliases for interacting with your deployment
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+# Use a persistent storage volume for SQLite database files and Active Storage files.
+volumes:
+  - "myapp_storage:/rails/storage"
+
+# Bridge fingerprinted assets between versions to avoid 404s on in-flight requests.
+asset_path: /rails/public/assets
+
+# Configure the image builder.
+builder:
+  arch: amd64

@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+require_relative "../config/boot"
+require "active_support/continuous_integration"
+
+CI = ActiveSupport::ContinuousIntegration
+SYSTEM_TEST_ENV = "PARALLEL_WORKERS=1"
+
+CI.run do
+  step "Setup",                   "bin/setup --skip-server"
+  step "Style: Ruby",             "bin/rubocop"
+  step "Security: Gem audit",     "bundle exec bundler-audit check --update"
+  step "Security: Brakeman",      "bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
+  step "Tests",                   "bin/rails test"
+  step "Tests: System",           "#{SYSTEM_TEST_ENV} bin/rails test:system"
+end

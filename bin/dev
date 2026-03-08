@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+PORT=3000
+
+if [ ! -f tmp/solid-queue.txt ]; then
+  export SOLID_QUEUE_IN_PUMA=false
+fi
+
+echo "Starting server on http://localhost:$PORT/"
+./bin/rails server -b 0.0.0.0 -p $PORT

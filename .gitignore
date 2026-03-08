@@ -1,0 +1,6 @@
+# Template-specific
+*.swp
+.DS_Store
+
+# Secrets must never be committed
+.kamal/secrets
