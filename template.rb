@@ -84,10 +84,6 @@ after_bundle do
     "  include Authentication\n"
   end
 
-  # ── Jobs ────────────────────────────────────────────────────────────────────
-
-  copy_template "app/jobs/application_job.rb"
-
   # ── Mailers ─────────────────────────────────────────────────────────────────
 
   copy_template "app/mailers/magic_link_mailer.rb"

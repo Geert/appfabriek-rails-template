@@ -2,31 +2,21 @@ module Authentication
   extend ActiveSupport::Concern
 
   included do
-    before_action :require_account # Checking and setting account must happen first
     before_action :require_authentication
     helper_method :authenticated?
-    helper_method :email_address_pending_authentication
 
     etag { Current.identity.id if authenticated? }
-
-    include Authentication::ViaMagicLink, LoginHelper
   end
 
   class_methods do
     def require_unauthenticated_access(**options)
-      allow_unauthenticated_access **options
+      allow_unauthenticated_access(**options)
       before_action :redirect_authenticated_user, **options
     end
 
     def allow_unauthenticated_access(**options)
       skip_before_action :require_authentication, **options
       before_action :resume_session, **options
-      allow_unauthorized_access **options
-    end
-
-    def disallow_account_scope(**options)
-      skip_before_action :require_account, **options
-      before_action :redirect_tenanted_request, **options
     end
   end
 
@@ -35,14 +25,8 @@ module Authentication
       Current.identity.present?
     end
 
-    def require_account
-      unless Current.account.present?
-        redirect_to main_app.session_menu_path(script_name: nil)
-      end
-    end
-
     def require_authentication
-      resume_session || authenticate_by_bearer_token || request_authentication
+      resume_session || request_authentication
     end
 
     def resume_session
@@ -55,34 +39,17 @@ module Authentication
       Session.find_signed(cookies.signed[:session_token])
     end
 
-    def authenticate_by_bearer_token
-      if request.authorization.to_s.include?("Bearer")
-        authenticate_or_request_with_http_token do |token|
-          if identity = Identity.find_by_permissable_access_token(token, method: request.method)
-            Current.identity = identity
-          end
-        end
-      end
-    end
-
     def request_authentication
-      if Current.account.present?
-        session[:return_to_after_authenticating] = request.url
-      end
-
-      redirect_to_login_url
+      session[:return_to_after_authenticating] = request.url
+      redirect_to new_session_url
     end
 
     def after_authentication_url
-      session.delete(:return_to_after_authenticating) || landing_url
+      session.delete(:return_to_after_authenticating) || root_url
     end
 
     def redirect_authenticated_user
-      redirect_to main_app.root_url if authenticated?
-    end
-
-    def redirect_tenanted_request
-      redirect_to main_app.root_url if Current.account.present?
+      redirect_to root_url if authenticated?
     end
 
     def start_new_session_for(identity)
@@ -99,9 +66,5 @@ module Authentication
     def terminate_session
       Current.session.destroy
       cookies.delete(:session_token)
-    end
-
-    def session_token
-      cookies[:session_token]
     end
 end

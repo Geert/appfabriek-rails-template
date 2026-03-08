@@ -16,7 +16,7 @@ class MagicLink < ApplicationRecord
 
   class << self
     def consume(code)
-      active.find_by(code: Code.sanitize(code))&.consume
+      active.find_by(code: code&.strip&.upcase)&.consume
     end
 
     def cleanup
@@ -32,7 +32,7 @@ class MagicLink < ApplicationRecord
   private
     def generate_code
       self.code ||= loop do
-        candidate = Code.generate(CODE_LENGTH)
+        candidate = SecureRandom.alphanumeric(CODE_LENGTH).upcase
         break candidate unless self.class.exists?(code: candidate)
       end
     end
